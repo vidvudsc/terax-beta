@@ -63,6 +63,12 @@ describe("resolveModel", () => {
     expect(resolveModel(modelId).provider).toBe(provider);
   });
 
+  it("maps the legacy OpenCode Kimi id to the current Go model id", () => {
+    const info = resolveModel("opencode-kimi-k2.7");
+    expect(info.id).toBe("opencode-kimi-k2.7-code");
+    expect(info.label).toBe("Kimi K2.7 Code");
+  });
+
   it("throws on an unknown static model id", () => {
     expect(() => resolveModel("nope-not-real")).toThrow();
   });
@@ -87,6 +93,10 @@ describe("getModelContextLimit", () => {
     ["grok-4.5", 500_000],
   ] as const)("uses the published context limit for %s", (modelId, limit) => {
     expect(getModelContextLimit(modelId)).toBe(limit);
+  });
+
+  it("uses the corrected context limit for the legacy OpenCode Kimi id", () => {
+    expect(getModelContextLimit("opencode-kimi-k2.7")).toBe(256_000);
   });
 });
 

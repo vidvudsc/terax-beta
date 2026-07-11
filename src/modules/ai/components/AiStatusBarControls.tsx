@@ -20,6 +20,7 @@ import {
   ChatGptIcon,
   ClaudeIcon,
   Clock01Icon,
+  CodeIcon,
   CoinsDollarIcon,
   ComputerIcon,
   CpuIcon,
@@ -71,6 +72,7 @@ const PROVIDER_ICON = {
   deepseek: DeepseekIcon,
   mistral: MistralIcon,
   openrouter: GlobeIcon,
+  opencode: CodeIcon,
   "openai-compatible": PlugIcon,
   lmstudio: ComputerIcon,
   mlx: AppleIcon,
@@ -98,7 +100,7 @@ export function AiOpenButton({ onOpen }: { onOpen: () => void }) {
 export function AiStatusBarControls() {
   const c = useComposer();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const toggleMini = useChatStore((s) => s.toggleMini);
+  const openMini = useChatStore((s) => s.openMini);
   const miniOpen = useChatStore((s) => s.mini.open);
   const closePanel = useChatStore((s) => s.closePanel);
 
@@ -170,8 +172,9 @@ export function AiStatusBarControls() {
         </Kbd>
       </Button>
       <IconBtn
-        title={`${miniOpen ? "Close" : "Open"} AI chat window (${fmtShortcut("⇧", MOD_KEY, "I")})`}
-        onClick={toggleMini}
+        title={miniOpen ? "Mini-window open" : "Open conversation"}
+        onClick={openMini}
+        disabled={miniOpen}
       >
         <HugeiconsIcon icon={Message01Icon} size={13} strokeWidth={1.75} />
       </IconBtn>

@@ -10,6 +10,7 @@ export type ProviderId =
   | "deepseek"
   | "mistral"
   | "openrouter"
+  | "opencode"
   | "openai-compatible"
   | "lmstudio"
   | "mlx"
@@ -88,6 +89,13 @@ export const PROVIDERS: readonly ProviderInfo[] = [
     keyringAccount: "openrouter-api-key",
     keyPrefix: "sk-or-",
     consoleUrl: "https://openrouter.ai/keys",
+  },
+  {
+    id: "opencode",
+    label: "OpenCode Go",
+    keyringAccount: "opencode-api-key",
+    keyPrefix: null,
+    consoleUrl: "https://opencode.ai/docs/go/",
   },
   {
     id: "openai-compatible",
@@ -630,9 +638,131 @@ export const MODELS = [
     description: "Local models via Ollama.",
     capabilities: { intelligence: 3, speed: 3, cost: 5 },
   },
+
+  // ── OpenCode Go (low-cost open coding models) ─────────────────────────────
+  {
+    id: "opencode-glm-5.2",
+    provider: "opencode",
+    label: "GLM 5.2",
+    hint: "OpenCode Go",
+    description: "Zhipu AI's GLM 5.2 via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-glm-5.1",
+    provider: "opencode",
+    label: "GLM 5.1",
+    hint: "OpenCode Go",
+    description: "Zhipu AI's GLM 5.1 via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-kimi-k2.7-code",
+    provider: "opencode",
+    label: "Kimi K2.7 Code",
+    hint: "OpenCode Go",
+    description: "Moonshot Kimi K2.7 Code via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-kimi-k2.6",
+    provider: "opencode",
+    label: "Kimi K2.6",
+    hint: "OpenCode Go",
+    description: "Moonshot Kimi K2.6 via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-mimo-v2.5",
+    provider: "opencode",
+    label: "MiMo V2.5",
+    hint: "OpenCode Go",
+    description: "MiMo V2.5 via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 5, cost: 5 },
+  },
+  {
+    id: "opencode-mimo-v2.5-pro",
+    provider: "opencode",
+    label: "MiMo V2.5 Pro",
+    hint: "OpenCode Go",
+    description: "MiMo V2.5 Pro via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-minimax-m3",
+    provider: "opencode",
+    label: "MiniMax M3",
+    hint: "OpenCode Go",
+    description: "MiniMax M3 via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 4, cost: 4 },
+  },
+  {
+    id: "opencode-minimax-m2.7",
+    provider: "opencode",
+    label: "MiniMax M2.7",
+    hint: "OpenCode Go",
+    description: "MiniMax M2.7 via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 4, cost: 4 },
+  },
+  {
+    id: "opencode-minimax-m2.5",
+    provider: "opencode",
+    label: "MiniMax M2.5",
+    hint: "OpenCode Go",
+    description: "MiniMax M2.5 via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 4, cost: 4 },
+  },
+  {
+    id: "opencode-qwen3.7-max",
+    provider: "opencode",
+    label: "Qwen 3.7 Max",
+    hint: "OpenCode Go",
+    description: "Alibaba's Qwen 3.7 Max via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 2, cost: 2 },
+  },
+  {
+    id: "opencode-qwen3.7-plus",
+    provider: "opencode",
+    label: "Qwen 3.7 Plus",
+    hint: "OpenCode Go",
+    description: "Alibaba's Qwen 3.7 Plus via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 3, cost: 3 },
+  },
+  {
+    id: "opencode-qwen3.6-plus",
+    provider: "opencode",
+    label: "Qwen 3.6 Plus",
+    hint: "OpenCode Go",
+    description: "Alibaba's Qwen 3.6 Plus via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 4, cost: 4 },
+  },
+  {
+    id: "opencode-deepseek-v4-pro",
+    provider: "opencode",
+    label: "DeepSeek V4 Pro",
+    hint: "OpenCode Go",
+    description: "DeepSeek V4 Pro via OpenCode Go.",
+    capabilities: { intelligence: 5, speed: 2, cost: 3 },
+  },
+  {
+    id: "opencode-deepseek-v4-flash",
+    provider: "opencode",
+    label: "DeepSeek V4 Flash",
+    hint: "OpenCode Go",
+    description: "DeepSeek V4 Flash via OpenCode Go.",
+    capabilities: { intelligence: 4, speed: 5, cost: 5 },
+  },
 ] as const satisfies readonly ModelInfo[];
 
 export type ModelId = (typeof MODELS)[number]["id"];
+
+const MODEL_ID_ALIASES: Record<string, ModelId> = {
+  "opencode-kimi-k2.7": "opencode-kimi-k2.7-code",
+};
+
+export function normalizeModelId(id: string): string {
+  return MODEL_ID_ALIASES[id] ?? id;
+}
 
 export function getCompatModelInfo(
   modelId: string,
@@ -658,19 +788,22 @@ export function resolveModel(
   endpoints: readonly CustomEndpoint[] = [],
 ): ModelInfo {
   if (isCompatModelId(modelId)) return getCompatModelInfo(modelId, endpoints);
-  const m = MODELS.find((x) => x.id === modelId);
+  const normalized = normalizeModelId(modelId);
+  const m = MODELS.find((x) => x.id === normalized);
   if (!m) throw new Error(`Unknown model: ${modelId}`);
   return m;
 }
 
 export function getModel(id: ModelId): ModelInfo {
-  const m = MODELS.find((x) => x.id === id);
+  const normalized = normalizeModelId(id);
+  const m = MODELS.find((x) => x.id === normalized);
   if (!m) throw new Error(`Unknown model: ${id}`);
   return m;
 }
 
 export function isKnownModelId(id: string): id is ModelId {
-  return MODELS.some((x) => x.id === id);
+  const normalized = normalizeModelId(id);
+  return MODELS.some((x) => x.id === normalized);
 }
 
 const FREEFORM_PROVIDERS: ReadonlySet<ProviderId> = new Set([
@@ -764,6 +897,20 @@ export const MODEL_CONTEXT_LIMITS: Record<string, number> = {
   "mistral-large-latest": 131_072,
   "mistral-medium-latest": 32_768,
   "codestral-latest": 256_000,
+  "opencode-glm-5.2": 128_000,
+  "opencode-glm-5.1": 128_000,
+  "opencode-kimi-k2.7-code": 256_000,
+  "opencode-kimi-k2.6": 256_000,
+  "opencode-mimo-v2.5": 128_000,
+  "opencode-mimo-v2.5-pro": 128_000,
+  "opencode-minimax-m3": 256_000,
+  "opencode-minimax-m2.7": 256_000,
+  "opencode-minimax-m2.5": 256_000,
+  "opencode-qwen3.7-max": 256_000,
+  "opencode-qwen3.7-plus": 256_000,
+  "opencode-qwen3.6-plus": 256_000,
+  "opencode-deepseek-v4-pro": 256_000,
+  "opencode-deepseek-v4-flash": 256_000,
 };
 
 export function getModelContextLimit(
@@ -774,7 +921,7 @@ export function getModelContextLimit(
   if (isCompatModelId(modelId)) return compatOverride ?? 128_000;
   if (modelId === "openai-compatible-custom" && compatOverride)
     return compatOverride;
-  return MODEL_CONTEXT_LIMITS[modelId] ?? 128_000;
+  return MODEL_CONTEXT_LIMITS[normalizeModelId(modelId)] ?? 128_000;
 }
 
 export type ModelPricing = {
@@ -873,6 +1020,7 @@ export const DEFAULT_AUTOCOMPLETE_MODEL: Partial<Record<ProviderId, string>> = {
   xai: "grok-4.3",
   deepseek: "deepseek-v4-flash",
   openrouter: "openai/gpt-5.4-mini",
+  opencode: "opencode-deepseek-v4-flash",
   "openai-compatible": "",
 };
 

@@ -309,11 +309,13 @@ export default function App() {
   useEditorFileSync({ tabs, tabsRef, editorRefs });
   useThemeFileEditing({ tabsRef, openFileTab });
 
-  const { explorerRoot, inheritedCwdForNewTab } = useWorkspaceCwd(
-    activeTab,
-    tabs,
-    launchCwd ?? home,
-  );
+  const newTabCwd = usePreferencesStore((s) => s.newTabCwd);
+
+  const {
+    explorerRoot,
+    inheritedCwdForNewTab,
+    inheritedCwdForNewTabHere,
+  } = useWorkspaceCwd(activeTab, tabs, launchCwd ?? home, newTabCwd);
 
   useWindowTitle(activeTab, explorerRoot);
 
@@ -496,6 +498,10 @@ export default function App() {
     newTab(inheritedCwdForNewTab());
   }, [newTab, inheritedCwdForNewTab]);
 
+  const openNewTabHere = useCallback(() => {
+    newTab(inheritedCwdForNewTabHere());
+  }, [newTab, inheritedCwdForNewTabHere]);
+
   const openNewPrivateTab = useCallback(() => {
     newPrivateTab(inheritedCwdForNewTab());
   }, [newPrivateTab, inheritedCwdForNewTab]);
@@ -656,6 +662,7 @@ export default function App() {
       "commandPalette.open": () => openCommandPalette("commands"),
       "commandPalette.content": () => openCommandPalette("content"),
       "tab.new": openNewTab,
+      "tab.newHere": openNewTabHere,
       "tab.newBlock": openNewBlockTab,
       "tab.newPrivate": openNewPrivateTab,
       "tab.newPreview": () => openPreviewTab(""),
@@ -722,6 +729,7 @@ export default function App() {
       cycleSpace,
       handleCloseTabOrPane,
       openNewTab,
+      openNewTabHere,
       openNewBlockTab,
       openNewPrivateTab,
       openPreviewTab,

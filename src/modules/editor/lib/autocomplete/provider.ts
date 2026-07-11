@@ -4,6 +4,7 @@ import {
   LMSTUDIO_DEFAULT_BASE_URL,
   modelSupportsTemperature,
   modelUsesReasoningTokens,
+  normalizeModelId,
 } from "@/modules/ai/config";
 import { buildLanguageModel } from "@/modules/ai/lib/agent";
 import { EMPTY_PROVIDER_KEYS } from "@/modules/ai/lib/keyring";
@@ -35,8 +36,9 @@ export async function requestCompletion(
   deps: CompletionDeps,
   signal: AbortSignal,
 ): Promise<string> {
-  const modelId =
-    deps.modelId.trim() || DEFAULT_AUTOCOMPLETE_MODEL[deps.provider] || "";
+  const modelId = normalizeModelId(
+    deps.modelId.trim() || DEFAULT_AUTOCOMPLETE_MODEL[deps.provider] || "",
+  );
   if (!modelId) {
     throw new Error(`No autocomplete model id set for ${deps.provider}.`);
   }
@@ -48,7 +50,10 @@ export async function requestCompletion(
     openaiCompatibleBaseURL: deps.openaiCompatibleBaseURL,
   });
 
-  const isReasoning = modelUsesReasoningTokens(deps.provider, modelId);
+  const isReasoning =
+    modelUsesReasoningTokens(deps.provider, modelId) ||
+    (deps.provider === "opencode" &&
+      /\b(deepseek|mimo|glm|qwen|minimax)\b/i.test(modelId));
   const providerOptions = isReasoning
     ? {
         anthropic: { effort: "low" },

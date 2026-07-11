@@ -21,6 +21,7 @@ import {
   setAutostart,
   setDefaultWorkspaceEnv,
   setExplorerGitDecorations,
+  setNewTabCwd,
   setRestoreWindowState,
   setShowHidden,
   setTerminalCursorBlink,
@@ -96,6 +97,7 @@ export function GeneralSection() {
   );
   const terminalFontSize = usePreferencesStore((s) => s.terminalFontSize);
   const terminalScrollback = usePreferencesStore((s) => s.terminalScrollback);
+  const newTabCwd = usePreferencesStore((s) => s.newTabCwd);
   const zoomLevel = usePreferencesStore((s) => s.zoomLevel);
   const agentNotifications = usePreferencesStore((s) => s.agentNotifications);
 
@@ -424,6 +426,18 @@ export function GeneralSection() {
               ))}
             </SelectContent>
           </Select>
+        </SettingRow>
+        <SettingRow
+          title="New tab directory"
+          description="Folder to open when pressing Cmd+T. Leave blank to inherit the current terminal's directory. Use ~ for home."
+        >
+          <input
+            type="text"
+            value={newTabCwd}
+            placeholder="Inherit current directory"
+            onChange={(e) => void setNewTabCwd(e.target.value)}
+            className="h-8 w-64 rounded-md border border-border bg-background px-2.5 text-[12px] outline-none focus:border-foreground/40"
+          />
         </SettingRow>
       </div>
 

@@ -5,6 +5,7 @@ import {
   endpointIdFromCompatModel,
   getModel,
   isCompatModelId,
+  normalizeModelId,
   providerNeedsKey,
   type ModelId,
   type ProviderId,
@@ -230,8 +231,9 @@ export const useChatStore = create<StoreState>((set, get) => ({
 
   selectedModelId: DEFAULT_MODEL_ID,
   setSelectedModelId: (id) => {
-    set({ selectedModelId: id });
-    void pushRecentModel(id);
+    const normalized = normalizeModelId(id);
+    set({ selectedModelId: normalized });
+    void pushRecentModel(normalized);
   },
 
   mini: { open: false },

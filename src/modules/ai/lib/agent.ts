@@ -6,6 +6,8 @@ import {
   type LanguageModel,
   type UIMessage,
 } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import {
   DEFAULT_MODEL_ID,
   endpointIdFromCompatModel,
@@ -72,6 +74,8 @@ export type BuildModelOptions = {
 };
 
 const modelCache = new Map<string, LanguageModel>();
+const OPENCODE_GO_BASE_URL = "https://opencode.ai/zen/go/v1";
+const remoteProxyFetch = createProxyFetch();
 
 export async function buildLanguageModel(
   provider: ProviderId,
@@ -159,6 +163,32 @@ export async function buildLanguageModel(
           "X-Title": "Terax",
         },
       })(resolvedModelId);
+      break;
+    }
+    case "opencode": {
+      const opencodeModelId = resolvedModelId.replace(/^opencode-/, "");
+      const messagesModels = new Set([
+        "minimax-m3",
+        "minimax-m2.7",
+        "minimax-m2.5",
+        "qwen3.7-max",
+        "qwen3.7-plus",
+        "qwen3.6-plus",
+      ]);
+      if (messagesModels.has(opencodeModelId)) {
+        built = createAnthropic({
+          apiKey: key,
+          baseURL: OPENCODE_GO_BASE_URL,
+          fetch: remoteProxyFetch,
+        })(opencodeModelId);
+      } else {
+        built = createOpenAICompatible({
+          name: "opencode",
+          baseURL: OPENCODE_GO_BASE_URL,
+          apiKey: key,
+          fetch: remoteProxyFetch,
+        })(opencodeModelId);
+      }
       break;
     }
     case "openai-compatible": {

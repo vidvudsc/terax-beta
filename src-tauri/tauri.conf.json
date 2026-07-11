@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Terax",
+  "productName": "Terax beta",
   "version": "0.8.5",
   "identifier": "app.crynta.terax",
   "build": {
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "Terax",
+        "title": "Terax beta",
         "width": 800,
         "height": 600,
         "minWidth": 420,

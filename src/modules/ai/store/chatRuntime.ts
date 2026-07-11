@@ -18,6 +18,34 @@ import {
   useChatStore,
 } from "./chatStore";
 
+function stringifyErrorValue(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (value instanceof Error && value.message.trim()) return value.message.trim();
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    for (const key of ["message", "responseBody", "statusText"]) {
+      const v = stringifyErrorValue(record[key]);
+      if (v) return v;
+    }
+    const data = record.data;
+    if (data && typeof data === "object") {
+      const dataRecord = data as Record<string, unknown>;
+      const v =
+        stringifyErrorValue(dataRecord.error) ??
+        stringifyErrorValue(dataRecord.message);
+      if (v) return v;
+    }
+    const cause = stringifyErrorValue(record.cause);
+    if (cause) return cause;
+  }
+  return null;
+}
+
+function formatChatError(error: unknown): string {
+  const message = stringifyErrorValue(error);
+  return message ?? String(error);
+}
+
 function makeChat(sessionId: string): Chat<UIMessage> {
   const readCache = new Map<string, { size: number; hash: number }>();
   const toolContext: ToolContext = {
@@ -111,7 +139,7 @@ function makeChat(sessionId: string): Chat<UIMessage> {
     onError: (e) => {
       useChatStore.getState().patchAgentMeta({
         status: "error",
-        error: e instanceof Error ? e.message : String(e),
+        error: formatChatError(e),
       });
     },
   });
