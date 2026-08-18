@@ -1,5 +1,10 @@
 import type { SearchTarget } from "@/modules/header";
-import { MAX_PANES_PER_TAB, type Tab } from "@/modules/tabs";
+import {
+  labelFor,
+  MAX_PANES_PER_TAB,
+  mergeCandidates,
+  type Tab,
+} from "@/modules/tabs";
 import { leafIds } from "@/modules/terminal";
 import {
   Cancel01Icon,
@@ -48,6 +53,7 @@ export type CommandPaletteActionContext = {
   closeActiveTabOrPane: () => void;
   splitPaneRight: () => void;
   splitPaneDown: () => void;
+  mergeTabIntoActive: (sourceTabId: number, dir: "row" | "col") => void;
   focusSearch: () => void;
   focusExplorerSearch: () => void;
   toggleSidebar: () => void;
@@ -209,6 +215,27 @@ export function createCommandItems(
       disabledReason: splitDisabled,
       run: ctx.splitPaneDown,
     },
+    ...mergeCandidates(ctx.tabs, ctx.activeId).flatMap((t) => {
+      const name = labelFor(t);
+      return [
+        {
+          id: `pane.mergeTab.${t.id}.row`,
+          title: `Merge tab "${name}" here (split right)`,
+          group: "Panes" as const,
+          keywords: ["merge", "combine", "join", "tab", "split", name],
+          icon: LayoutTwoColumnIcon,
+          run: () => ctx.mergeTabIntoActive(t.id, "row"),
+        },
+        {
+          id: `pane.mergeTab.${t.id}.col`,
+          title: `Merge tab "${name}" here (split down)`,
+          group: "Panes" as const,
+          keywords: ["merge", "combine", "join", "tab", "split", name],
+          icon: LayoutTwoRowIcon,
+          run: () => ctx.mergeTabIntoActive(t.id, "col"),
+        },
+      ];
+    }),
     {
       id: "git.graph",
       title: "Open git graph",

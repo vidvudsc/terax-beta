@@ -1,6 +1,7 @@
 import { isMarkdownPath } from "@/lib/utils";
 import {
   findLeafCwd,
+  graftSubtree,
   hasLeaf,
   leafIds,
   nextLeafId,
@@ -171,6 +172,29 @@ export function nextActiveInSpace(
   if (sameSpace.length <= 1) return null;
   const idx = sameSpace.findIndex((t) => t.id === closingId);
   return (sameSpace[idx - 1] ?? sameSpace[idx + 1]).id;
+}
+
+// Terminal tabs eligible to merge into `targetId` as a split: same space and
+// privacy, non-blocks, and a combined pane count within the renderer slot
+// pool. Ordered by strip position starting after the target (wrapping), so
+// index 0 is the "next tab" a shortcut should pick.
+export function mergeCandidates(tabs: Tab[], targetId: number): TerminalTab[] {
+  const target = tabs.find((t) => t.id === targetId);
+  if (target?.kind !== "terminal" || target.blocks) return [];
+  const targetLeafCount = leafIds(target.paneTree).length;
+  const pool = tabs.filter(
+    (t): t is TerminalTab =>
+      t.kind === "terminal" &&
+      t.id !== targetId &&
+      t.spaceId === target.spaceId &&
+      !t.blocks &&
+      (t.private ?? false) === (target.private ?? false) &&
+      targetLeafCount + leafIds(t.paneTree).length <= MAX_PANES_PER_TAB,
+  );
+  const targetIdx = tabs.findIndex((t) => t.id === targetId);
+  const after = pool.filter((t) => tabs.indexOf(t) > targetIdx);
+  const before = pool.filter((t) => tabs.indexOf(t) < targetIdx);
+  return [...after, ...before];
 }
 
 // Gap index is relative to the space's own strip, including the dragged tab.
@@ -1047,6 +1071,59 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     [],
   );
 
+  /**
+   * Graft `sourceTabId`'s entire pane tree into `targetTabId` as a split next
+   * to the target's active leaf, then remove the source tab. No session is
+   * disposed — leaf ids are preserved, so running shells (and anything inside
+   * them) survive the move and reattach when the panes remount.
+   */
+  const mergeTabIntoSplit = useCallback(
+    (sourceTabId: number, targetTabId: number, dir: SplitDir): boolean => {
+      let merged = false;
+      setTabs((curr) => {
+        if (sourceTabId === targetTabId) return curr;
+        const source = curr.find((t) => t.id === sourceTabId);
+        const target = curr.find((t) => t.id === targetTabId);
+        if (source?.kind !== "terminal" || target?.kind !== "terminal")
+          return curr;
+        if (source.blocks || target.blocks) return curr;
+        if (source.spaceId !== target.spaceId) return curr;
+        // Mixing privacy would silently expose a private buffer to the agent.
+        if ((source.private ?? false) !== (target.private ?? false))
+          return curr;
+        const combined =
+          leafIds(target.paneTree).length + leafIds(source.paneTree).length;
+        if (combined > MAX_PANES_PER_TAB) return curr;
+        const paneTree = graftSubtree(
+          target.paneTree,
+          target.activeLeafId,
+          nextIdRef.current++,
+          source.paneTree,
+          dir,
+        );
+        const activeLeafId = source.activeLeafId;
+        const cwd = findLeafCwd(paneTree, activeLeafId) ?? target.cwd;
+        merged = true;
+        return curr
+          .filter((t) => t.id !== sourceTabId)
+          .map((t) =>
+            t.id === targetTabId
+              ? {
+                  ...t,
+                  cold: false,
+                  paneTree,
+                  activeLeafId,
+                  ...(cwd !== undefined && { cwd }),
+                }
+              : t,
+          );
+      });
+      if (merged) setActiveId(targetTabId);
+      return merged;
+    },
+    [],
+  );
+
   const closePaneByLeaf = useCallback((leafId: number): void => {
     let didRemove = false;
     setTabs((curr) => {
@@ -1174,6 +1251,7 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     focusPane,
     focusNextPaneInTab,
     splitActivePane,
+    mergeTabIntoSplit,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,

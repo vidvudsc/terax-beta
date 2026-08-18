@@ -67,6 +67,7 @@ import {
 } from "@/modules/spaces";
 import { StatusBar } from "@/modules/statusbar";
 import {
+  mergeCandidates,
   TabSwitcherHud,
   useTabSwitcher,
   useTabs,
@@ -137,6 +138,7 @@ export default function App() {
     focusPane,
     focusNextPaneInTab,
     splitActivePane,
+    mergeTabIntoSplit,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,
@@ -632,6 +634,20 @@ export default function App() {
     [activeId, splitActivePane],
   );
 
+  // Pull another tab's panes into the active tab as a split. Sessions ride
+  // along by leaf id, so running processes are never interrupted.
+  const mergeTabIntoActive = useCallback(
+    (sourceTabId: number, dir: "row" | "col") => {
+      mergeTabIntoSplit(sourceTabId, activeId, dir);
+    },
+    [activeId, mergeTabIntoSplit],
+  );
+
+  const mergeNextTabIntoActive = useCallback(() => {
+    const next = mergeCandidates(tabsRef.current, activeId)[0];
+    if (next) mergeTabIntoSplit(next.id, activeId, "row");
+  }, [activeId, mergeTabIntoSplit]);
+
   const handleCloseTabOrPane = useCallback(() => {
     const t = tabsRef.current.find((x) => x.id === activeId);
     if (t?.kind === "terminal" && leafIds(t.paneTree).length > 1) {
@@ -680,6 +696,7 @@ export default function App() {
       "space.overview": () => setSwitcherOpen(true),
       "pane.splitRight": () => splitActivePaneInActiveTab("row"),
       "pane.splitDown": () => splitActivePaneInActiveTab("col"),
+      "pane.mergeNextTab": mergeNextTabIntoActive,
       "pane.focusNext": () => focusNextPaneInTab(activeId, 1),
       "pane.focusPrev": () => focusNextPaneInTab(activeId, -1),
       "pane.source": toggleSourceControl,
@@ -736,6 +753,7 @@ export default function App() {
       activeSpaceId,
       selectByIndex,
       splitActivePaneInActiveTab,
+      mergeNextTabIntoActive,
       focusNextPaneInTab,
       toggleSourceControl,
       hasComposer,
@@ -1028,6 +1046,7 @@ export default function App() {
             closeActiveTabOrPane: handleCloseTabOrPane,
             splitPaneRight: () => splitActivePaneInActiveTab("row"),
             splitPaneDown: () => splitActivePaneInActiveTab("col"),
+            mergeTabIntoActive,
             focusSearch: () => searchInlineRef.current?.focus(),
             focusExplorerSearch: () => explorerRef.current?.focusSearch(),
             toggleSidebar,
@@ -1057,6 +1076,7 @@ export default function App() {
       toggleSourceControl,
       handleCloseTabOrPane,
       splitActivePaneInActiveTab,
+      mergeTabIntoActive,
       toggleSidebar,
       togglePanelAndFocus,
       askFromSelection,

@@ -10,6 +10,7 @@ export {
   DEFAULT_SPACE_ID,
   useTabs,
   nextActiveInSpace,
+  mergeCandidates,
   type Tab,
   type TerminalTab,
   type EditorTab,

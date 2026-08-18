@@ -99,6 +99,58 @@ export function splitLeaf(
 }
 
 /**
+ * Insert an existing subtree next to `targetId` in direction `dir`. Leaf ids
+ * are preserved, so live sessions keyed by leaf id survive the move — this is
+ * what lets a whole tab be merged into another as a split without respawning.
+ *
+ * Follows splitLeaf's shallow-tree rule: when the insertion point already
+ * runs in `dir`, the subtree's own same-direction children are spliced in as
+ * siblings instead of nesting.
+ */
+export function graftSubtree(
+  tree: PaneNode,
+  targetId: PaneId,
+  newSplitId: PaneId,
+  subtree: PaneNode,
+  dir: SplitDir,
+): PaneNode {
+  const grafted =
+    subtree.kind === "split" && subtree.dir === dir
+      ? subtree.children
+      : [subtree];
+  if (tree.kind === "split" && tree.dir === dir) {
+    const idx = tree.children.findIndex(
+      (c) => c.kind === "leaf" && c.id === targetId,
+    );
+    if (idx >= 0) {
+      return {
+        ...tree,
+        children: [
+          ...tree.children.slice(0, idx + 1),
+          ...grafted,
+          ...tree.children.slice(idx + 1),
+        ],
+      };
+    }
+  }
+  if (isLeaf(tree)) {
+    if (tree.id !== targetId) return tree;
+    return {
+      kind: "split",
+      id: newSplitId,
+      dir,
+      children: [tree, ...grafted],
+    };
+  }
+  return {
+    ...tree,
+    children: tree.children.map((c) =>
+      graftSubtree(c, targetId, newSplitId, subtree, dir),
+    ),
+  };
+}
+
+/**
  * Remove a leaf and collapse single-child splits left in its wake. Returns
  * `null` when the entire subtree is gone.
  */
