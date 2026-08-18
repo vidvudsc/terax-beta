@@ -157,7 +157,7 @@ export const SHORTCUTS: Shortcut[] = [
     id: "pane.mergeNextTab",
     label: "Merge next tab into split",
     group: "Panes",
-    defaultBindings: [{ [MOD_PROP]: true, alt: true, key: "m" }],
+    defaultBindings: [{ [MOD_PROP]: true, key: "u" }],
   },
   {
     id: "pane.focusNext",
@@ -214,7 +214,7 @@ export const SHORTCUTS: Shortcut[] = [
     id: "terminal.toggleInput",
     label: "Toggle Shell / AI input",
     group: "Terminal",
-    defaultBindings: [{ [MOD_PROP]: true, key: "u" }],
+    defaultBindings: [{ [MOD_PROP]: true, shift: true, key: "u" }],
   },
   {
     id: "blocks.prev",
