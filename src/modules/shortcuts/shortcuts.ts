@@ -25,6 +25,10 @@ export type ShortcutId =
   | "pane.mergeNextTab"
   | "pane.focusNext"
   | "pane.focusPrev"
+  | "pane.swapLeft"
+  | "pane.swapRight"
+  | "pane.swapUp"
+  | "pane.swapDown"
   | "pane.source"
   | "terminal.clear"
   | "terminal.toggleInput"
@@ -166,7 +170,31 @@ export const SHORTCUTS: Shortcut[] = [
     label: "Focus previous pane",
     group: "Panes",
     defaultBindings: [{ [MOD_PROP]: true, key: "[" }],
-  },  
+  },
+  {
+    id: "pane.swapLeft",
+    label: "Swap pane left",
+    group: "Panes",
+    defaultBindings: [{ [MOD_PROP]: true, alt: true, key: "ArrowLeft" }],
+  },
+  {
+    id: "pane.swapRight",
+    label: "Swap pane right",
+    group: "Panes",
+    defaultBindings: [{ [MOD_PROP]: true, alt: true, key: "ArrowRight" }],
+  },
+  {
+    id: "pane.swapUp",
+    label: "Swap pane up",
+    group: "Panes",
+    defaultBindings: [{ [MOD_PROP]: true, alt: true, key: "ArrowUp" }],
+  },
+  {
+    id: "pane.swapDown",
+    label: "Swap pane down",
+    group: "Panes",
+    defaultBindings: [{ [MOD_PROP]: true, alt: true, key: "ArrowDown" }],
+  },
   {
     id: "pane.source",
     label: "Toggle source panel",
@@ -268,6 +296,8 @@ export const SHORTCUTS: Shortcut[] = [
     id: "ai.askSelection",
     label: "Ask AI about selection",
     group: "AI",
+    // Keep Mod+L available to the shell for clear-screen, including when
+    // terminal text is selected and this shortcut is otherwise eligible.
     defaultBindings: [{ [MOD_PROP]: true, key: "j" }],
   },
   {
