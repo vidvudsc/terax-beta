@@ -39,6 +39,7 @@ function baseContext(
     splitPaneRight: noop,
     splitPaneDown: noop,
     mergeTabIntoActive: noop,
+    breakOutActivePane: noop,
     focusSearch: noop,
     focusExplorerSearch: noop,
     toggleSidebar: noop,

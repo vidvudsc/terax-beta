@@ -23,6 +23,7 @@ export type ShortcutId =
   | "pane.splitRight"
   | "pane.splitDown"
   | "pane.mergeNextTab"
+  | "pane.breakOut"
   | "pane.focusNext"
   | "pane.focusPrev"
   | "pane.swapLeft"
@@ -158,6 +159,12 @@ export const SHORTCUTS: Shortcut[] = [
     label: "Merge next tab into split",
     group: "Panes",
     defaultBindings: [{ [MOD_PROP]: true, key: "u" }],
+  },
+  {
+    id: "pane.breakOut",
+    label: "Break pane out into its own tab",
+    group: "Panes",
+    defaultBindings: [{ [MOD_PROP]: true, shift: true, key: "m" }],
   },
   {
     id: "pane.focusNext",

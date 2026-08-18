@@ -1389,6 +1389,56 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     [],
   );
 
+  /**
+   * Inverse of mergeTabIntoSplit: extract the active leaf of `tabId` into its
+   * own tab, inserted right after it in the strip. The session rides along by
+   * leaf id, so whatever runs in the pane is never interrupted.
+   */
+  const breakOutActivePane = useCallback((tabId: number): number | null => {
+    let newTabId: number | null = null;
+    setTabs((curr) => {
+      const source = curr.find((t) => t.id === tabId);
+      if (source?.kind !== "terminal" || source.blocks) return curr;
+      const leafId = source.activeLeafId;
+      const remaining = removeLeaf(source.paneTree, leafId);
+      if (remaining === null) return curr; // single pane — already its own tab
+      const cwd = findLeafCwd(source.paneTree, leafId);
+      const sib = siblingLeafOf(source.paneTree, leafId);
+      const rest = leafIds(remaining);
+      const restActive = sib && rest.includes(sib) ? sib : rest[0];
+      const tabIdNew = nextIdRef.current++;
+      newTabId = tabIdNew;
+      const broken: TerminalTab = {
+        id: tabIdNew,
+        kind: "terminal",
+        spaceId: source.spaceId,
+        title: cwd ? basename(cwd) : source.title,
+        cwd,
+        paneTree: { kind: "leaf", id: leafId, cwd },
+        activeLeafId: leafId,
+        ...(source.private && { private: true }),
+      };
+      const next: Tab[] = [];
+      for (const t of curr) {
+        if (t.id !== tabId) {
+          next.push(t);
+          continue;
+        }
+        const restCwd = findLeafCwd(remaining, restActive);
+        next.push({
+          ...source,
+          paneTree: remaining,
+          activeLeafId: restActive,
+          ...(restCwd !== undefined && { cwd: restCwd }),
+        });
+        next.push(broken);
+      }
+      return next;
+    });
+    if (newTabId !== null) setActiveId(newTabId);
+    return newTabId;
+  }, []);
+
   const closePaneByLeaf = useCallback((leafId: number): void => {
     let didRemove = false;
     setTabs((curr) => {
@@ -1521,6 +1571,7 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     swapActivePaneInDirection,
     splitActivePane,
     mergeTabIntoSplit,
+    breakOutActivePane,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,

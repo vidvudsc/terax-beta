@@ -54,6 +54,7 @@ export type CommandPaletteActionContext = {
   splitPaneRight: () => void;
   splitPaneDown: () => void;
   mergeTabIntoActive: (sourceTabId: number, dir: "row" | "col") => void;
+  breakOutActivePane: () => void;
   focusSearch: () => void;
   focusExplorerSearch: () => void;
   toggleSidebar: () => void;
@@ -214,6 +215,17 @@ export function createCommandItems(
       shortcutId: "pane.splitDown",
       disabledReason: splitDisabled,
       run: ctx.splitPaneDown,
+    },
+    {
+      id: "pane.breakOut",
+      title: "Break pane out into its own tab",
+      group: "Panes",
+      keywords: ["unmerge", "detach", "extract", "pane", "tab", "split"],
+      icon: LayoutTwoColumnIcon,
+      shortcutId: "pane.breakOut",
+      disabledReason:
+        activePaneCount < 2 ? "No split panes in this tab" : undefined,
+      run: ctx.breakOutActivePane,
     },
     ...mergeCandidates(ctx.tabs, ctx.activeId).flatMap((t) => {
       const name = labelFor(t);

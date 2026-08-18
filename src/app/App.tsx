@@ -167,6 +167,7 @@ export default function App() {
     swapActivePaneInDirection,
     splitActivePane,
     mergeTabIntoSplit,
+    breakOutActivePane,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,
@@ -820,6 +821,10 @@ export default function App() {
     if (next) mergeTabIntoSplit(next.id, activeId, "row");
   }, [activeId, mergeTabIntoSplit]);
 
+  const breakOutActivePaneInActiveTab = useCallback(() => {
+    breakOutActivePane(activeId);
+  }, [activeId, breakOutActivePane]);
+
   const livePaneBounds = useCallback((tabId: number): PaneBounds[] => {
     const tab = document.querySelector<HTMLElement>(
       `[data-terminal-tab="${tabId}"]`,
@@ -892,6 +897,7 @@ export default function App() {
       "pane.splitRight": () => splitActivePaneInActiveTab("row"),
       "pane.splitDown": () => splitActivePaneInActiveTab("col"),
       "pane.mergeNextTab": mergeNextTabIntoActive,
+      "pane.breakOut": breakOutActivePaneInActiveTab,
       "pane.focusNext": () => focusNextPaneInTab(activeId, 1),
       "pane.focusPrev": () => focusNextPaneInTab(activeId, -1),
       "pane.swapLeft": () => swapActivePane("left"),
@@ -953,6 +959,7 @@ export default function App() {
       selectByIndex,
       splitActivePaneInActiveTab,
       mergeNextTabIntoActive,
+      breakOutActivePaneInActiveTab,
       focusNextPaneInTab,
       swapActivePane,
       toggleSourceControl,
@@ -1253,6 +1260,7 @@ export default function App() {
             splitPaneRight: () => splitActivePaneInActiveTab("row"),
             splitPaneDown: () => splitActivePaneInActiveTab("col"),
             mergeTabIntoActive,
+            breakOutActivePane: breakOutActivePaneInActiveTab,
             focusSearch: () => searchInlineRef.current?.focus(),
             focusExplorerSearch: () => explorerRef.current?.focusSearch(),
             toggleSidebar,
@@ -1283,6 +1291,7 @@ export default function App() {
       handleCloseTabOrPane,
       splitActivePaneInActiveTab,
       mergeTabIntoActive,
+      breakOutActivePaneInActiveTab,
       toggleSidebar,
       togglePanelAndFocus,
       askFromSelection,
