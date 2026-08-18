@@ -1,0 +1,45 @@
+name: Beta Build
+
+on:
+  push:
+    tags:
+      - "beta-v*"
+  workflow_dispatch:
+
+jobs:
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+          key: beta-macos-aarch64
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Unsigned personal build: updater artifacts are disabled via config
+      # overlay so no signing key is needed (the beta skips auto-update anyway).
+      - name: Build app
+        run: pnpm tauri build --target aarch64-apple-darwin --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v6
+        with:
+          name: terax-beta-macos-arm64
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
