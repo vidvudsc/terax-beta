@@ -14,7 +14,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -38,7 +38,7 @@ jobs:
         run: pnpm tauri build --target aarch64-apple-darwin --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       - name: Upload dmg
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: terax-beta-macos-arm64
           path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
